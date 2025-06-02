@@ -35,8 +35,10 @@ section .data
 
 section .text
     global _start
+    extern sdbm_hash
+    extern strlen
 
-parse_distro_id:
+get_distro:
     ret
 
 

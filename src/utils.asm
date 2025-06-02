@@ -53,5 +53,19 @@ sdbm_hash:
 
 
 strlen:
+    push ebp                    ; init stack
+    mov ebp, esp
 
+    mov edx, [ebp + 8]          ; store char* in edx
+    xor eax, eax                ; init eax to 0
+
+.loop:
+    cmp byte [edx], 0           ; check if terminator is found
+    je .exit                    ; exit if yes
+    inc edx
+    inc eax
+    jmp .loop
+
+.exit:   
+    pop ebp                     ; cleanup
     ret
