@@ -1,28 +1,27 @@
 section .rodata
     distro_art_table:
         dd unknown_art
-        dd "arch"
+        dd 0xD99B1896   ; 'arch'
         dd arch_art 
-        dd "arti"
-        dd artix_art 
-        dd "debi"
+       ; dd "arti"
+       ; dd artix_art 
+        dd 0x7948D555   ; 'debian'
         dd debian_art 
-        dd "gent"
+        dd 0xEF987004   ; 'gentoo'
         dd gentoo_art 
-        dd "linu"
-        dd linuxlite_art 
-        dd "linu"
+        dd 0xC5AE0EE2   ; 'linuxlite'
+        dd linuxlite_art    
+        dd 0xF42EDE36   ; 'linuxmint'
         dd linuxmint_art 
-        dd "popa"
+        dd 0x3795E431   ; 'pop'
         dd popos_art 
-        dd "ubun"
+        dd 0x9D00FDE7   ; 'ubuntu'
         dd ubuntu_art 
         dd 0            ; terminator
 
     unknown_art:    incbin "./resources/unknown.bin"
     arch_art:       incbin "./resources/arch.bin"
     ;artix_art:      incbin "./resources/artix.bin"
-    artix_art:      incbin "./resources/arch.bin"
     debian_art:     incbin "./resources/debian.bin"
     gentoo_art:     incbin "./resources/gentoo.bin"
     linuxlite_art:  incbin "./resources/linuxlite.bin"
@@ -37,6 +36,8 @@ section .data
 section .text
     global _start
 
+parse_distro_id:
+    ret
 
 
 _start:
