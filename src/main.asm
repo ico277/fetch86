@@ -18,6 +18,7 @@ section .rodata
         dd 0x9D00FDE7   ; 'ubuntu'
         dd ubuntu_art 
         dd 0            ; terminator
+        dd 0            ; terminator
 
     unknown_art:    incbin "./resources/unknown.bin"
     arch_art:       incbin "./resources/arch.bin"
@@ -33,20 +34,107 @@ section .data
     msg db "UwU Nya~!", 0xA, 0
     msg_len equ $ - msg
 
+section .bss
+    distro_data: resd 3
+    buffer: resb 4096
+
 section .text
     global _start
     extern sdbm_hash
     extern strlen
+    extern print
+    extern println
+    extern readline
 
 get_distro:
+    push ebp
+    mov ebp, esp
+    sub esp, 8
+
+    ; get hash of first argument (distro ID)
+    push dword [ebp + 8]
+    call sdbm_hash
+    add esp, 4
+
+    ; init vars
+    mov edx, distro_art_table
+    mov ecx, 0
+.loop:
+    inc ecx
+    cmp dword [edx + ((8 * ecx) - 4)], 0
+    je .notfound
+    cmp eax, [edx + ((8 * ecx) - 4)]
+    je .found
+    jmp .loop
+.notfound:
+    mov dword eax, [distro_art_table]
+    mov [esp], eax        ; moves the first element (unknown distro) of distro_art_table
+    jmp .parse
+.found:
+    mov eax, [edx + (8 * ecx)]
+    mov [esp], eax
+.parse:
+    ; do struct
+    push dword [esp]
+    call strlen
+    add esp, 4
+
+    mov [esp + 4], eax
+
+    mov eax, [esp]
+    mov [distro_data], eax
+
+    mov eax, [esp]
+    add eax, [esp + 4]
+    inc eax
+    mov eax, [eax]
+    mov [distro_data + 4], eax
+
+    mov eax, [esp]
+    add eax, [esp + 4]
+    add eax, 4
+    inc eax
+    mov [distro_data + 8], eax
+.exit:
+    mov eax, distro_data
+    add esp, 8
+    pop ebp
     ret
 
 
 _start:
+    ;mov dword [buffer], "gent"
+    ;mov word [buffer + 4], "oo"
+    ;mov byte [buffer + 6], 0
+    ;push buffer
+    ;call get_distro
+    ;add esp, 4
+
+    ;push dword [distro_data]
+    ;call println
+    ;add esp, 4
+
+    ;push dword [distro_data + 8]
+    ;call print
+    ;add esp, 4
+
+    push dword 0
+    push dword 4096
+    push buffer
+    call readline
+    add esp, 12
+
+    mov byte [buffer + 4095], 0
+    push buffer
+    call println
+    add esp, 4
+
+    jmp .exit
+
+    mov edx, eax
     mov eax, 4  
     mov ebx, 1
-    mov ecx, [distro_art_table + (8 * 3)] ; char*
-    mov edx, 25  ; len
+    mov ecx, [distro_data + 8] ; char*
     int 0x80
 .exit:
     mov eax, 1

@@ -2,6 +2,7 @@ AS = nasm
 LD = ld
 ASFLAGS = -f elf32
 LDFLAGS = -m elf_i386 -no-pie
+DEBUG = 
 
 SRC_DIR = src
 BIN = fetch86
@@ -24,7 +25,7 @@ $(BIN): $(OBJS)
 #	$(TOOLS_DIR)/generate_ids.c.out $(PCI_IDS) $(PCI_BIN) $(PCI_ARGS)
 
 %.o: $(SRC_DIR)/%.asm
-	$(AS) $(ASFLAGS) -o $@ $<
+	$(AS) $(DEBUG) $(ASFLAGS) -o $@ $<
 
 clean:
 	rm -f $(OBJS) $(BIN)
