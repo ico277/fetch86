@@ -3,8 +3,8 @@ section .rodata
         dd unknown_art
         dd 0xD99B1896   ; 'arch'
         dd arch_art 
-       ; dd "arti"
-       ; dd artix_art 
+        dd 0xAE211532
+        dd artix_art 
         dd 0x7948D555   ; 'debian'
         dd debian_art 
         dd 0xEF987004   ; 'gentoo'
@@ -22,7 +22,7 @@ section .rodata
 
     unknown_art:    incbin "./resources/unknown.bin"
     arch_art:       incbin "./resources/arch.bin"
-    ;artix_art:      incbin "./resources/artix.bin"
+    artix_art:      incbin "./resources/artix.bin"
     debian_art:     incbin "./resources/debian.bin"
     gentoo_art:     incbin "./resources/gentoo.bin"
     linuxlite_art:  incbin "./resources/linuxlite.bin"
@@ -34,8 +34,6 @@ section .rodata
     os_release_id:   db "ID=", 0
 
 section .data
-    msg db "UwU Nya~!", 0xA, 0
-    msg_len equ $ - msg
 
 section .bss
     distro_data: resd 3
@@ -107,32 +105,6 @@ get_distro:
 
 
 _start:
-    ;mov dword [buffer], "gent"
-    ;mov word [buffer + 4], "oo"
-    ;mov byte [buffer + 6], 0
-    ;push buffer
-    ;call get_distro
-    ;add esp, 4
-
-    ;push dword [distro_data]
-    ;call println
-    ;add esp, 4
-
-    ;push dword [distro_data + 8]
-    ;call print
-    ;add esp, 4
-
-    ;push dword 0
-    ;push dword buffer
-    ;push dword 4096
-    ;call readline
-    ;add esp, 12
-
-    ;mov byte [buffer + 4095], 0
-    ;push buffer
-    ;call println
-    ;add esp, 4
-
     push os_release_id
     push os_release_file
     push buffer
@@ -141,6 +113,21 @@ _start:
     add esp, 16
 
     push buffer
+    call strlen
+    add esp, 4
+
+    mov byte [buffer + eax - 1], 0
+
+    push buffer + 3
+    call get_distro
+    add esp, 4
+
+
+    push dword [distro_data]
+    call println
+    add esp, 4
+
+    push dword [distro_data + 8]
     call println
     add esp, 4
 .exit:

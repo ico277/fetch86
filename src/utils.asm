@@ -173,6 +173,7 @@ readline:
 str_startswith:
     push ebp
     mov ebp, esp
+    sub esp, 4
 
     ; get the length of the string
     push dword [ebp + 8]
@@ -185,19 +186,22 @@ str_startswith:
     call strlen
     add esp, 4
     ; compare the sizes
-    cmp ecx, eax
+    cmp eax, ecx
     ; if the prefix is longer than the string, it cant be equal
     ja .false
 
-    mov eax, 0                  ; index
+    dec eax
+    mov dword [esp], eax                  ; index
+    mov eax, 0
 .loop:
+    cmp eax, [esp]
+    je .true
+
     mov ecx, [ebp + 8]
     movzx ecx, byte [ecx + eax]
     mov edx, [ebp + 12]
     movzx edx, byte [edx + eax]
 
-    cmp edx, 0
-    je .true
     cmp ecx, edx
     jne .false
     inc eax
@@ -209,6 +213,7 @@ str_startswith:
 .true:
     mov eax, 1
 .exit:
+    add esp, 4
     pop ebp
     ret
     
@@ -239,8 +244,8 @@ find_in_file_by_line:
     cmp eax, 0
     je .not_found
 
-    push dword [ebp + 12]
     push dword [ebp + 20]
+    push dword [ebp + 12]
     call str_startswith
     add esp, 8
     cmp eax, 1
