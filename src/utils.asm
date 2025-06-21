@@ -10,6 +10,7 @@ global strlen
 global print
 global println
 global readline
+global find_in_file_by_line
 
 ;unsigned long hash = 0;
 ;int c;
@@ -121,7 +122,7 @@ println:
     pop ebp                     ; more stack cleanup
     ret
 
-; arguments:  count, char* (buffer), file number
+; arguments:    count, char* (buffer), file number
 ; return value: amount of bytes read
 readline:
     push ebp
@@ -139,11 +140,12 @@ readline:
     int 0x80                    ; execute the syscall
     
     cmp eax, 0                  ; check if eax is zero
-    je .exit
+    je .exit_no_inc
     mov eax, [ebp + 8]
+    sub eax, 1
     cmp dword [esp], eax        ; check if buffer is full
     je .exit
-    mov eax, [ebx + 12]         ; buffer
+    mov eax, [ebp + 12]         ; buffer
     add eax, [esp]              ; advance by the index
     cmp byte [eax], 0xA         ; check if newline was found
     je .exit
@@ -152,9 +154,105 @@ readline:
 .exit:
     mov dword eax, [esp]
     inc eax
-
+.exit_no_inc:
+    mov ecx, [ebp + 8]
+    cmp eax, ecx
+    je .exit_buf_full
+    ja .exit_buf_full
+    mov edx, [ebp + 12]
+    add edx, eax
+    mov byte [edx], 0
+.exit_buf_full:
     add esp, 4
     pop ebx
     pop ebp
     ret
+
+; arguments: char* str, char* prefix
+; return value: eax = 0 (false) || eax = 1 (true)
+str_startswith:
+    push ebp
+    mov ebp, esp
+
+    ; get the length of the string
+    push dword [ebp + 8]
+    call strlen
+    add esp, 4
+    mov ecx, eax
+
+    ; get the length of the prefix
+    push dword [ebp + 12]
+    call strlen
+    add esp, 4
+    ; compare the sizes
+    cmp ecx, eax
+    ; if the prefix is longer than the string, it cant be equal
+    ja .false
+
+    mov eax, 0                  ; index
+.loop:
+    mov ecx, [ebp + 8]
+    movzx ecx, byte [ecx + eax]
+    mov edx, [ebp + 12]
+    movzx edx, byte [edx + eax]
+
+    cmp edx, 0
+    je .true
+    cmp ecx, edx
+    jne .false
+    inc eax
+    jmp .loop
+
+.false:
+    mov eax, 0
+    jmp .exit
+.true:
+    mov eax, 1
+.exit:
+    pop ebp
+    ret
     
+; arguments: count, char* buffer, char* filepath, char* match
+; return value: pointer to buffer on where match is in buffer or zero (not found)
+find_in_file_by_line:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    sub esp, 4
+    mov dword [esp], 0
+
+    mov eax, 5
+    mov ebx, [ebp + 16]
+    mov ecx, 0
+    mov edx, 0
+    int 0x80
+    cmp eax, 0
+    jl .not_found
+    mov [esp], eax
+.loop:
+    push dword [esp]
+    push dword [ebp + 12]
+    push dword [ebp + 8]
+    call readline
+    add esp, 12
+    cmp eax, 0
+    je .not_found
+
+    push dword [ebp + 12]
+    push dword [ebp + 20]
+    call str_startswith
+    add esp, 8
+    cmp eax, 1
+    je .found
+    jmp .loop
+.not_found:
+    mov eax, 0
+    jmp .exit
+.found:
+    mov eax, [ebp + 12]
+.exit:
+    add esp, 4
+    pop ebx
+    pop ebp
+    ret

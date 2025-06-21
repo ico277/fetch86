@@ -30,6 +30,9 @@ section .rodata
     popos_art:      incbin "./resources/pop.bin"
     ubuntu_art:     incbin "./resources/ubuntu.bin"
 
+    os_release_file: db "/etc/os-release", 0
+    os_release_id:   db "ID=", 0
+
 section .data
     msg db "UwU Nya~!", 0xA, 0
     msg_len equ $ - msg
@@ -45,6 +48,7 @@ section .text
     extern print
     extern println
     extern readline
+    extern find_in_file_by_line
 
 get_distro:
     push ebp
@@ -118,24 +122,27 @@ _start:
     ;call print
     ;add esp, 4
 
-    push dword 0
-    push dword 4096
-    push buffer
-    call readline
-    add esp, 12
+    ;push dword 0
+    ;push dword buffer
+    ;push dword 4096
+    ;call readline
+    ;add esp, 12
 
-    mov byte [buffer + 4095], 0
+    ;mov byte [buffer + 4095], 0
+    ;push buffer
+    ;call println
+    ;add esp, 4
+
+    push os_release_id
+    push os_release_file
+    push buffer
+    push dword 4096
+    call find_in_file_by_line
+    add esp, 16
+
     push buffer
     call println
     add esp, 4
-
-    jmp .exit
-
-    mov edx, eax
-    mov eax, 4  
-    mov ebx, 1
-    mov ecx, [distro_data + 8] ; char*
-    int 0x80
 .exit:
     mov eax, 1
     mov ebx, 0
