@@ -11,6 +11,7 @@ global print
 global println
 global readline
 global find_in_file_by_line
+global int_to_str
 
 ;unsigned long hash = 0;
 ;int c;
@@ -258,6 +259,51 @@ find_in_file_by_line:
     mov eax, [ebp + 12]
 .exit:
     add esp, 4
+    pop ebx
+    pop ebp
+    ret
+
+int_to_str:
+    push ebp
+    mov ebp, esp
+    push ebx
+    push esi
+    push edi
+
+    mov eax, [ebp + 8]    ; value
+    mov edi, [ebp + 12]   ; buffer pointer
+
+    test eax, eax
+    jnz .convert
+    mov byte [edi], '0'
+    mov byte [edi + 1], 0
+    jmp .done
+
+.convert:
+    xor ecx, ecx          ; digit count
+    mov esi, edi          ; save buffer pointer
+
+.loop:
+    xor edx, edx
+    mov ebx, 10
+    div ebx               ; eax /= 10, edx = remainder
+    add dl, '0'
+    push dx               ; push digit onto stack
+    inc ecx
+    test eax, eax
+    jnz .loop
+
+.write_digits:
+    pop ax
+    mov [edi], al
+    inc edi
+    loop .write_digits
+
+    mov byte [edi], 0     ; null terminator
+
+.done:
+    pop edi
+    pop esi
     pop ebx
     pop ebp
     ret
